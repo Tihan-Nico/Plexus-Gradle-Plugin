@@ -1,0 +1,91 @@
+plugins {
+    id 'com.gradle.plugin-publish' version '0.11.0'
+    id 'java-gradle-plugin'
+}
+
+repositories {
+    maven { url 'https://maven.google.com' }
+    jcenter()
+    mavenCentral()
+}
+
+apply plugin: 'groovy'
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'java-library'
+
+// Run the following to update the lockfiles
+//     ./gradlew dependencies --write-locks
+configurations.all {
+    it.resolutionStrategy.activateDependencyLocking()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+
+    // These are compileOnly just so we can inspect these classes in IntelliJ
+    // Android Gradle Plugin (AGP)
+    compileOnly 'com.android.tools.build:gradle:4.1.1'
+    testCompileOnly 'com.android.tools.build:gradle:4.1.1'
+
+    // Google Play Services Gradle Plugin
+    compileOnly 'com.google.gms:google-services:4.3.+'
+    testCompileOnly 'com.google.gms:google-services:4.3.+'
+
+    // Google's strict version matcher plugin
+    compileOnly 'com.google.android.gms:strict-version-matcher-plugin:1.2.+'
+    testCompileOnly 'com.google.android.gms:strict-version-matcher-plugin:1.2.+'
+
+    testCompile gradleTestKit()
+    testCompile 'junit:junit:4.12'
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
+        exclude module: 'groovy-all'
+    }
+}
+
+group = 'gradle.plexus'
+version = '1.0'
+description 'Plexus Gradle Plugin'
+// Run to upload a new version to the Gradle Plugin Portal
+// ./gradlew publishPlugins
+
+pluginBundle {
+    website = 'https://plexus.dev/'
+    vcsUrl = 'https://github.com/plexusinc/Plexus-Gradle-Plugin'
+    plugins {
+        plugin {
+            id = 'com.plexus.gradle.plexus-gradle-plugin'
+            displayName = 'Plexus Gradle Plugin'
+            description = project.description
+            tags = ['Plexus', 'Android', 'push', 'notifications', 'GCM', 'FCM']
+        }
+    }
+}
+
+gradlePlugin {
+    plugins {
+        plugin {
+            id = 'com.plexus.gradle.plexus-gradle-plugin'
+            implementationClass = 'com.plexus.gradle.GradleProjectPlugin'
+        }
+    }
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
+
+// Build for Local Testing
+apply plugin: 'maven'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../repo'))
+        }
+    }
+}
